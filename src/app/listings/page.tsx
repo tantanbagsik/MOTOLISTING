@@ -3,20 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Search, Filter, Grid, List, Mic, MicOff, Send, X } from "lucide-react";
+import { Search, Filter, Grid, List, Mic, MicOff, Send, X, MapPin, Fuel, Calendar, Settings } from "lucide-react";
 
 type PriceType = "sale" | "rent" | "installment";
-
-const mockVehicles = [
-  { id: "1", make: "Toyota", model: "Camry", year: 2024, price: 2150000, priceType: "sale", mileage: 5000, transmission: "Automatic", fuelType: "Petrol", condition: "New", image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=300&fit=crop" },
-  { id: "2", make: "Honda", model: "Civic", year: 2023, price: 3500, priceType: "rent", mileage: 25000, transmission: "Automatic", fuelType: "Petrol", condition: "Used", image: "https://images.unsplash.com/photo-1606611013016-969c19ba27bb?w=400&h=300&fit=crop" },
-  { id: "3", make: "Tesla", model: "Model 3", year: 2024, price: 3850000, priceType: "installment", mileage: 1000, transmission: "Automatic", fuelType: "Electric", condition: "New", image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400&h=300&fit=crop" },
-  { id: "4", make: "BMW", model: "3 Series", year: 2023, price: 3850000, priceType: "sale", mileage: 15000, transmission: "Automatic", fuelType: "Petrol", condition: "Used", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop" },
-  { id: "5", make: "Mercedes", model: "C-Class", year: 2024, price: 4250000, priceType: "sale", mileage: 3000, transmission: "Automatic", fuelType: "Diesel", condition: "New", image: "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=400&h=300&fit=crop" },
-  { id: "6", make: "Audi", model: "A4", year: 2023, price: 2850000, priceType: "installment", mileage: 20000, transmission: "Automatic", fuelType: "Petrol", condition: "Used", image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=300&fit=crop" },
-  { id: "7", make: "Toyota", model: "Fortuner", year: 2024, price: 1850000, priceType: "sale", mileage: 8000, transmission: "Automatic", fuelType: "Diesel", condition: "New", image: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=400&h=300&fit=crop" },
-  { id: "8", make: "Mitsubishi", model: " Montero Sport", year: 2024, price: 4500, priceType: "rent", mileage: 18000, transmission: "Automatic", fuelType: "Diesel", condition: "Used", image: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=400&h=300&fit=crop" },
-];
 
 const priceTypeLabels: Record<PriceType, string> = {
   sale: "For Sale",
@@ -35,13 +24,20 @@ function ListingsContent() {
   const [isListening, setIsListening] = useState(false);
   const [showInquiry, setShowInquiry] = useState<string | null>(null);
   const [inquiryMessage, setInquiryMessage] = useState("");
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     make: "",
-    minPrice: "",
-    maxPrice: "",
     transmission: "",
     fuelType: "",
+    condition: "",
+    minPrice: "",
+    maxPrice: "",
   });
+
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
 
   useEffect(() => {
     const tab = searchParams.get("tab") as PriceType;
@@ -50,14 +46,29 @@ function ListingsContent() {
     }
   }, [searchParams]);
 
-  const filteredVehicles = mockVehicles.filter((v) => {
+  const fetchVehicles = async () => {
+    try {
+      const res = await fetch("/api/listings");
+      if (res.ok) {
+        const data = await res.json();
+        setVehicles(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch vehicles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredVehicles = vehicles.filter((v) => {
     const matchesTab = v.priceType === activeTab;
     const matchesSearch = searchQuery === "" || 
-      `${v.make} ${v.model}`.toLowerCase().includes(searchQuery.toLowerCase());
+      `${v.make} ${v.model} ${v.title}`.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesMake = filters.make === "" || v.make === filters.make;
     const matchesTransmission = filters.transmission === "" || v.transmission === filters.transmission;
     const matchesFuel = filters.fuelType === "" || v.fuelType === filters.fuelType;
-    return matchesTab && matchesSearch && matchesMake && matchesTransmission && matchesFuel;
+    const matchesCondition = filters.condition === "" || v.condition === filters.condition;
+    return matchesTab && matchesSearch && matchesMake && matchesTransmission && matchesFuel && matchesCondition;
   });
 
   const toggleVoice = () => {
@@ -80,13 +91,28 @@ function ListingsContent() {
     }
   };
 
-  const handleInquiry = (vehicleId: string) => {
+  const handleInquiry = async (vehicleId: string) => {
     if (inquiryMessage.trim()) {
-      alert(`Inquiry sent: ${inquiryMessage}`);
-      setInquiryMessage("");
-      setShowInquiry(null);
+      try {
+        await fetch("/api/inquiries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vehicleId,
+            message: inquiryMessage,
+            type: "text",
+          }),
+        });
+        alert("Inquiry sent successfully!");
+        setInquiryMessage("");
+        setShowInquiry(null);
+      } catch (error) {
+        alert("Failed to send inquiry");
+      }
     }
   };
+
+  const uniqueMakes = [...new Set(vehicles.map(v => v.make))];
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +126,7 @@ function ListingsContent() {
             <div className="flex-1 relative">
               <input
                 type="text"
-                placeholder="Search make, model..."
+                placeholder="Search make, model, year..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3 pl-12 rounded-lg shadow-lg border-0 focus:ring-2 focus:ring-accent"
@@ -151,12 +177,9 @@ function ListingsContent() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary"
                   >
                     <option value="">All Makes</option>
-                    <option value="Toyota">Toyota</option>
-                    <option value="Honda">Honda</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Mercedes">Mercedes</option>
-                    <option value="Audi">Audi</option>
-                    <option value="Tesla">Tesla</option>
+                    {uniqueMakes.map((make) => (
+                      <option key={make} value={make}>{make}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -187,13 +210,33 @@ function ListingsContent() {
                     <option value="Hybrid">Hybrid</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">Condition</label>
+                  <select
+                    value={filters.condition}
+                    onChange={(e) => setFilters({ ...filters, condition: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">All</option>
+                    <option value="New">New</option>
+                    <option value="Used">Used</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={() => setFilters({ make: "", transmission: "", fuelType: "", condition: "", minPrice: "", maxPrice: "" })}
+                  className="w-full py-2 text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
+                >
+                  Clear Filters
+                </button>
               </div>
             </aside>
           )}
 
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {(Object.keys(priceTypeLabels) as PriceType[]).map((tab) => (
                   <button
                     key={tab}
@@ -225,85 +268,121 @@ function ListingsContent() {
               </div>
             </div>
 
-            <p className="text-text-secondary mb-4">{filteredVehicles.length} vehicles found</p>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="text-text-secondary mt-4">Loading vehicles...</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-text-secondary mb-4">{filteredVehicles.length} vehicles found</p>
 
-            <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-              {filteredVehicles.map((vehicle, index) => (
-                <div
-                  key={vehicle.id}
-                  className={`bg-card rounded-2xl shadow-card overflow-hidden hover:shadow-card-hover transition-all duration-300 animate-fade-in stagger-${(index % 5) + 1} ${
-                    viewMode === "list" ? "flex" : ""
-                  }`}
-                >
-                  <div className={`relative h-48 overflow-hidden ${viewMode === "list" ? "w-72 flex-shrink-0" : ""}`}>
-                    <img
-                      src={vehicle.image}
-                      alt={`${vehicle.make} ${vehicle.model}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-                      vehicle.priceType === "sale" ? "bg-success text-white" :
-                      vehicle.priceType === "rent" ? "bg-accent text-secondary" :
-                      "bg-primary text-white"
-                    }`}>
-                      {priceTypeLabels[vehicle.priceType as PriceType]}
-                    </span>
-                  </div>
-                  
-                  <div className="p-5 flex-1">
-                    <h3 className="font-outfit text-xl font-semibold text-text-primary">
-                      {vehicle.make} {vehicle.model}
-                    </h3>
-                    <p className="text-text-secondary text-sm mb-3">{vehicle.year} • {vehicle.mileage?.toLocaleString()} miles • {vehicle.transmission}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">{vehicle.fuelType}</span>
-                      <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">{vehicle.condition}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-primary">
-                        {vehicle.priceType === "rent" ? `₱${vehicle.price.toLocaleString()}/day` : `₱${vehicle.price.toLocaleString()}`}
-                      </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setShowInquiry(vehicle.id)}
-                          className="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-sm"
-                        >
-                          Inquire
-                        </button>
-                        {vehicle.priceType === "rent" ? (
-                          <Link
-                            href={`/rent/${vehicle.id}`}
-                            className="px-4 py-2 bg-accent text-secondary rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
-                          >
-                            Book Now
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/listings/${vehicle.id}`}
-                            className="px-4 py-2 bg-accent text-secondary rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
-                          >
-                            View Details
-                          </Link>
+                <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
+                  {filteredVehicles.map((vehicle, index) => (
+                    <div
+                      key={vehicle.id}
+                      className={`bg-card rounded-2xl shadow-card overflow-hidden hover:shadow-card-hover transition-all duration-300 animate-fade-in stagger-${(index % 5) + 1} ${
+                        viewMode === "list" ? "flex" : ""
+                      }`}
+                    >
+                      <div className={`relative h-48 overflow-hidden ${viewMode === "list" ? "w-72 flex-shrink-0" : ""}`}>
+                        <img
+                          src={vehicle.images?.[0] || "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400&h=300&fit=crop"}
+                          alt={vehicle.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+                          vehicle.priceType === "sale" ? "bg-success text-white" :
+                          vehicle.priceType === "rent" ? "bg-accent text-secondary" :
+                          "bg-primary text-white"
+                        }`}>
+                          {priceTypeLabels[vehicle.priceType as PriceType]}
+                        </span>
+                        {vehicle.listingStatus === "pending" && (
+                          <span className="absolute top-4 left-4 px-3 py-1 rounded-full text-sm font-medium bg-warning text-white">
+                            Pending Approval
+                          </span>
                         )}
                       </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                      
+                      <div className="p-5 flex-1">
+                        <h3 className="font-outfit text-xl font-semibold text-text-primary">
+                          {vehicle.make} {vehicle.model}
+                        </h3>
+                        <p className="text-text-secondary text-sm mb-3 flex items-center gap-2">
+                          <Calendar className="w-4 h-4" /> {vehicle.year}
+                          {vehicle.mileage && <><span>•</span> {vehicle.mileage.toLocaleString()} km</>}
+                          {vehicle.transmission && <><span>•</span> {vehicle.transmission}</>}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {vehicle.fuelType && (
+                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full flex items-center gap-1">
+                              <Fuel className="w-3 h-3" /> {vehicle.fuelType}
+                            </span>
+                          )}
+                          {vehicle.condition && (
+                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">{vehicle.condition}</span>
+                          )}
+                          {vehicle.color && (
+                            <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">{vehicle.color}</span>
+                          )}
+                        </div>
 
-            {filteredVehicles.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-text-secondary text-lg">No vehicles found matching your criteria</p>
-                <button
-                  onClick={() => { setSearchQuery(""); setFilters({ make: "", minPrice: "", maxPrice: "", transmission: "", fuelType: "" }); }}
-                  className="mt-4 text-primary hover:underline"
-                >
-                  Clear filters
-                </button>
-              </div>
+                        {vehicle.seller && (
+                          <p className="text-xs text-text-secondary mb-3">
+                            Listed by: {vehicle.seller.name}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-primary">
+                            {vehicle.priceType === "rent" ? `₱${vehicle.price.toLocaleString()}/day` : `₱${vehicle.price.toLocaleString()}`}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setShowInquiry(vehicle.id)}
+                              className="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary hover:text-white transition-colors text-sm"
+                            >
+                              Inquire
+                            </button>
+                            {vehicle.priceType === "rent" ? (
+                              <Link
+                                href={`/rent/${vehicle.id}`}
+                                className="px-4 py-2 bg-accent text-secondary rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+                              >
+                                Book Now
+                              </Link>
+                            ) : (
+                              <Link
+                                href={`/listings/${vehicle.id}`}
+                                className="px-4 py-2 bg-accent text-secondary rounded-lg hover:bg-accent/90 transition-colors text-sm font-medium"
+                              >
+                                View Details
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {filteredVehicles.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-text-secondary text-lg">No vehicles found matching your criteria</p>
+                    <button
+                      onClick={() => { 
+                        setSearchQuery(""); 
+                        setFilters({ make: "", transmission: "", fuelType: "", condition: "", minPrice: "", maxPrice: "" }); 
+                      }}
+                      className="mt-4 text-primary hover:underline"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
