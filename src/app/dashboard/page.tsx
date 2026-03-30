@@ -71,7 +71,9 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
-    router.push("/api/auth/signout");
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/auth/login");
+    router.refresh();
   };
 
   if (loading) {
