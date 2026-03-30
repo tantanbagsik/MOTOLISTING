@@ -5,7 +5,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const priceType = searchParams.get('priceType');
   
-  const where = priceType ? { priceType } : {};
+  const where: any = { listingStatus: 'approved' };
+  if (priceType) where.priceType = priceType;
   
   const vehicles = await prisma.vehicle.findMany({
     where,
@@ -34,9 +35,9 @@ export async function POST(request: Request) {
       fuelType: body.fuelType,
       condition: body.condition,
       description: body.description,
-      images: JSON.stringify(body.images || []),
+      images: body.images || [],
       sellerId: body.sellerId,
-      status: 'available',
+      listingStatus: 'pending',
     },
   });
 

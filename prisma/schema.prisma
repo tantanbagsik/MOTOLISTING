@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  phone     String?
-  password  String
-  role      String    @default("customer") // customer, seller, admin
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  vehicles  Vehicle[]
-  inquiries Inquiry[]
-  bookings  Booking[]
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  password      String?
+  image         String?
+  role          String    @default("seller") // customer, seller, admin
+  provider      String    @default("credentials") // credentials, google, facebook
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  vehicles      Vehicle[]
+  inquiries     Inquiry[]
+  bookings      Booking[]
 }
 
 model Vehicle {
@@ -36,8 +38,10 @@ model Vehicle {
   fuelType     String?   // petrol, diesel, electric, hybrid
   condition   String?   // new, used
   description  String?
-  images       String    // JSON array of image URLs
-  status       String    @default("available") // available, sold, rented
+  images       String[]  // Array of image URLs
+  listingStatus String  @default("pending") // pending, approved, sold, rented
+  approvedAt   DateTime?
+  approvedBy   String?
   sellerId     String
   seller       User      @relation(fields: [sellerId], references: [id])
   createdAt    DateTime  @default(now())

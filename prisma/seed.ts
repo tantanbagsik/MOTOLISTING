@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -11,16 +12,8 @@ async function main() {
   await prisma.vehicle.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create seller user
-  const seller = await prisma.user.create({
-    data: {
-      name: 'Ray Panganiban Technology',
-      email: 'seller@raypanganiban.tech',
-      phone: '+63 912 345 6789',
-      password: 'seller123',
-      role: 'seller',
-    },
-  });
+  // Hash passwords
+  const hashedPassword = await bcrypt.hash('password123', 12);
 
   // Create admin user
   await prisma.user.create({
@@ -28,10 +21,35 @@ async function main() {
       name: 'Admin User',
       email: 'admin@raypanganiban.tech',
       phone: '+63 999 888 7777',
-      password: 'admin123',
+      password: hashedPassword,
       role: 'admin',
+      provider: 'credentials',
     },
   });
+
+  // Create seller users
+  const sellers = await Promise.all([
+    prisma.user.create({
+      data: {
+        name: 'Ray Panganiban Technology',
+        email: 'raypanganiban0825@gmail.com',
+        phone: '09564804965',
+        password: hashedPassword,
+        role: 'seller',
+        provider: 'credentials',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: 'Juan Dela Cruz',
+        email: 'juan@example.com',
+        phone: '+63 912 345 6789',
+        password: hashedPassword,
+        role: 'seller',
+        provider: 'credentials',
+      },
+    }),
+  ]);
 
   // Create vehicles with Philippine market prices
   const vehicles = [
@@ -49,8 +67,8 @@ async function main() {
       fuelType: 'Petrol',
       condition: 'New',
       description: 'Experience the perfect blend of elegance and performance with the 2024 Toyota Camry.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'Honda Civic 2023',
@@ -66,8 +84,8 @@ async function main() {
       fuelType: 'Petrol',
       condition: 'Used',
       description: 'Reliable and fuel-efficient Honda Civic available for daily rental.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1606611013016-969c19ba27bb?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1606611013016-969c19ba27bb?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'Tesla Model 3 2024',
@@ -83,8 +101,8 @@ async function main() {
       fuelType: 'Electric',
       condition: 'New',
       description: 'Premium electric sedan with autopilot features available on installment.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'BMW 3 Series 2023',
@@ -100,8 +118,8 @@ async function main() {
       fuelType: 'Petrol',
       condition: 'Used',
       description: 'Luxury sports sedan with premium features and performance.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'Mercedes C-Class 2024',
@@ -117,8 +135,8 @@ async function main() {
       fuelType: 'Diesel',
       condition: 'New',
       description: 'Executive luxury sedan with cutting-edge technology.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1617531653332-bd46c24f2068?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'Audi A4 2023',
@@ -134,8 +152,8 @@ async function main() {
       fuelType: 'Petrol',
       condition: 'Used',
       description: 'German engineering excellence available on easy installment plans.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800'],
+      listingStatus: 'approved',
     },
     {
       title: 'Toyota Fortuner 2024',
@@ -151,8 +169,8 @@ async function main() {
       fuelType: 'Diesel',
       condition: 'New',
       description: 'Rugged and reliable SUV for the Filipino family.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=800'],
+      listingStatus: 'pending',
     },
     {
       title: 'Mitsubishi Montero Sport 2024',
@@ -168,36 +186,45 @@ async function main() {
       fuelType: 'Diesel',
       condition: 'Used',
       description: 'Powerful SUV available for rent with driver or self-drive.',
-      images: JSON.stringify(['https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800']),
-      status: 'available',
+      images: ['https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800'],
+      listingStatus: 'pending',
     },
   ];
 
-  for (const vehicle of vehicles) {
+  for (let i = 0; i < vehicles.length; i++) {
+    const vehicle = vehicles[i];
+    const seller = sellers[i % sellers.length];
     const created = await prisma.vehicle.create({
-      data: { ...vehicle, sellerId: seller.id },
-    });
-    console.log(`Created: ${vehicle.make} ${vehicle.model} - ₱${vehicle.price.toLocaleString()}`);
-
-    // Add location for each vehicle (Metro Manila area)
-    const lat = 14.5995 + (Math.random() - 0.5) * 0.1;
-    const lng = 120.9842 + (Math.random() - 0.5) * 0.1;
-    const speed = Math.floor(Math.random() * 80);
-
-    await prisma.vehicleLocation.create({
       data: {
-        vehicleId: created.id,
-        latitude: lat,
-        longitude: lng,
-        speed: speed,
-        timestamp: new Date(),
+        ...vehicle,
+        sellerId: seller.id,
+        approvedAt: vehicle.listingStatus === 'approved' ? new Date() : null,
       },
     });
+    console.log(`Created: ${vehicle.make} ${vehicle.model} - ₱${vehicle.price.toLocaleString()} (${vehicle.listingStatus})`);
+
+    // Add location for some vehicles (Metro Manila area)
+    if (i < 4) {
+      const lat = 14.5995 + (Math.random() - 0.5) * 0.1;
+      const lng = 120.9842 + (Math.random() - 0.5) * 0.1;
+      const speed = Math.floor(Math.random() * 80);
+
+      await prisma.vehicleLocation.create({
+        data: {
+          vehicleId: created.id,
+          latitude: lat,
+          longitude: lng,
+          speed: speed,
+          timestamp: new Date(),
+        },
+      });
+    }
   }
 
   console.log('\n✅ Database seeded successfully!');
-  console.log('📧 Seller: seller@raypanganiban.tech / seller123');
-  console.log('📧 Admin: admin@raypanganiban.tech / admin123');
+  console.log('📧 Admin: admin@raypanganiban.tech / password123');
+  console.log('📧 Seller: raypanganiban0825@gmail.com / password123');
+  console.log('📧 Seller: juan@example.com / password123');
 }
 
 main()
