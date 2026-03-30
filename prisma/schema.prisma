@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  phone     String?
+  password  String
+  role      String    @default("customer") // customer, seller, admin
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+  inquiries Inquiry[]
+  bookings  Booking[]
+}
+
+model Vehicle {
+  id           String    @id @default(cuid())
+  title        String
+  make         String
+  model        String
+  year         Int
+  price        Float
+  priceType    String    // sale, rent, installment
+  mileage      Int?
+  color        String?
+  transmission String?   // automatic, manual
+  engine       String?
+  fuelType     String?   // petrol, diesel, electric, hybrid
+  condition   String?   // new, used
+  description  String?
+  images       String    // JSON array of image URLs
+  status       String    @default("available") // available, sold, rented
+  sellerId     String
+  seller       User      @relation(fields: [sellerId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  inquiries    Inquiry[]
+  bookings     Booking[]
+  locations    VehicleLocation[]
+}
+
+model Inquiry {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  message    String
+  type       String   // voice, text
+  status     String   @default("pending") // pending, responded, resolved
+  createdAt  DateTime @default(now())
+}
+
+model Booking {
+  id               String   @id @default(cuid())
+  vehicleId        String
+  vehicle          Vehicle  @relation(fields: [vehicleId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  startDate        DateTime
+  endDate          DateTime
+  pickupTime       String
+  returnTime       String
+  duration         String   // hours, days, weeks
+  pickupLocation   String
+  totalPrice       Float
+  status           String   @default("pending") // pending, confirmed, completed, cancelled
+  agreementSigned  Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  reminders        Reminder[]
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  type        String   // email, sms
+  scheduledFor DateTime
+  sent        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model VehicleLocation {
+  id         String   @id @default(cuid())
+  vehicleId  String
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  latitude   Float
+  longitude  Float
+  speed      Float    // km/h
+  timestamp  DateTime
+  createdAt  DateTime @default(now())
+}
+
+model Quotation {
+  id            String   @id @default(cuid())
+  vehicleId     String
+  basePrice     Float
+  insuranceType String
+  insuranceCost Float
+  downPayment   Float
+  duration      Int      // months for installment
+  accessories   Float
+  deliveryFee   Float
+  totalPrice    Float
+  monthlyPayment Float
+  createdAt     DateTime @default(now())
+}

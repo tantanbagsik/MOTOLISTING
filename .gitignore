@@ -1,0 +1,14 @@
+# Node modules
+node_modules/
+.next/
+.env
+# Prisma
+prisma/*.db
+prisma/query-engine*
+# Build output
+out/
+# Logs
+*.log
+# OS
+.DS_Store
+Thumbs.db
