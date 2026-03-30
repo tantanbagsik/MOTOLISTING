@@ -32,7 +32,7 @@ export async function getVehicleLocations() {
 
 export async function getSalesSummary() {
   const soldVehicles = await prisma.vehicle.findMany({
-    where: { status: 'sold' },
+    where: { listingStatus: 'sold' },
   });
   return {
     totalSold: soldVehicles.length,
