@@ -112,7 +112,7 @@ function ListingsContent() {
     }
   };
 
-  const uniqueMakes = [...new Set(vehicles.map(v => v.make))];
+  const uniqueMakes = Array.from(new Set(vehicles.map(v => v.make)));
 
   return (
     <div className="min-h-screen bg-background">
