@@ -198,7 +198,7 @@ export default function Home() {
               Browse Vehicles
             </Link>
             <Link
-              href="/seller"
+              href="/dashboard/listings/add"
               className="bg-white text-primary px-8 py-3 rounded-full font-semibold hover:scale-105 transition-transform"
             >
               List Your Car
@@ -228,14 +228,14 @@ export default function Home() {
             <div>
               <h4 className="text-white font-semibold mb-4">Account</h4>
               <ul className="space-y-2">
-                <li><Link href="/seller" className="text-white/60 hover:text-white">Seller Dashboard</Link></li>
+                <li><Link href="/dashboard" className="text-white/60 hover:text-white">Dashboard</Link></li>
                 <li><Link href="/admin" className="text-white/60 hover:text-white">Admin Panel</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4">Contact</h4>
-              <p className="text-white/60">support@autohubpro.com</p>
-              <p className="text-white/60">+1 (555) 123-4567</p>
+              <p className="text-white/60">raypanganiban0825@gmail.com</p>
+              <p className="text-white/60">09564804965</p>
             </div>
           </div>
           <div className="border-t border-white/10 mt-8 pt-8 text-center text-white/40">
