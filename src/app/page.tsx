@@ -451,7 +451,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-text-secondary text-sm mb-6 leading-relaxed">
-                  &ldquo;{testimonial.content}&rdquo;
+                  &quot;{testimonial.content}&quot;
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
