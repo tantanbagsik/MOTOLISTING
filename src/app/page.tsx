@@ -136,7 +136,7 @@ export default function Home() {
               </h1>
 
               <p className="text-lg text-white/70 max-w-xl mb-10 animate-fade-in stagger-1 leading-relaxed">
-                The Philippines' trusted marketplace for buying, renting, and financing vehicles. 
+                The Philippines&apos; trusted marketplace for buying, renting, and financing vehicles. 
                 Browse thousands of verified listings and find your dream car.
               </p>
 
@@ -451,7 +451,7 @@ export default function Home() {
                   ))}
                 </div>
                 <p className="text-text-secondary text-sm mb-6 leading-relaxed">
-                  "{testimonial.content}"
+                  &ldquo;{testimonial.content}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold text-sm">
