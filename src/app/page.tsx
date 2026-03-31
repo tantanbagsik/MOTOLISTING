@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import {
   Search, Car, CreditCard, Calendar, Shield, Clock, Headphones,
   ArrowRight, Star, ChevronRight, ShoppingBag, Tag, Users, CheckCircle,
-  TrendingUp, Globe, Award
+  TrendingUp, Globe, Award, Mail, Phone, MapPin, Send, Fuel, Settings
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -99,6 +99,8 @@ const brands = ["Toyota", "Honda", "Mitsubishi", "Nissan", "Ford", "Mazda", "Hyu
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [featuredVehicles, setFeaturedVehicles] = useState<any[]>([]);
+  const [inquiryForm, setInquiryForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [inquirySent, setInquirySent] = useState(false);
 
   useEffect(() => {
     fetch("/api/listings?status=approved")
@@ -110,6 +112,24 @@ export default function Home() {
       })
       .catch(() => {});
   }, []);
+
+  const handleInquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Name: ${inquiryForm.name}\nEmail: ${inquiryForm.email}\nPhone: ${inquiryForm.phone}\n\n${inquiryForm.message}`,
+          type: "contact",
+        }),
+      });
+      setInquirySent(true);
+      setInquiryForm({ name: "", email: "", phone: "", message: "" });
+    } catch (error) {
+      alert("Failed to send inquiry. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,9 +318,29 @@ export default function Home() {
                     <h3 className="font-outfit text-lg font-semibold text-text-primary mb-1">
                       {vehicle.make} {vehicle.model}
                     </h3>
-                    <p className="text-text-secondary text-sm mb-3">
-                      {vehicle.year} {vehicle.transmission && `• ${vehicle.transmission}`} {vehicle.fuelType && `• ${vehicle.fuelType}`}
-                    </p>
+                    <div className="flex items-center gap-2 text-text-secondary text-sm mb-3">
+                      <Calendar className="w-4 h-4" />
+                      <span>{vehicle.year}</span>
+                      {vehicle.transmission && (
+                        <>
+                          <span>•</span>
+                          <Settings className="w-4 h-4" />
+                          <span>{vehicle.transmission}</span>
+                        </>
+                      )}
+                      {vehicle.fuelType && (
+                        <>
+                          <span>•</span>
+                          <Fuel className="w-4 h-4" />
+                          <span>{vehicle.fuelType}</span>
+                        </>
+                      )}
+                    </div>
+                    {vehicle.color && (
+                      <p className="text-text-secondary text-xs mb-3">
+                        Color: {vehicle.color}
+                      </p>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-xl font-bold text-primary">
                         {vehicle.priceType === "rent"
@@ -426,6 +466,124 @@ export default function Home() {
                 {brand}
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Inquiry Section */}
+      <section className="py-20 bg-white" id="contact">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12">
+            <div>
+              <h2 className="font-outfit text-3xl md:text-4xl font-bold text-text-primary mb-4">
+                Get In Touch
+              </h2>
+              <p className="text-text-secondary mb-8">
+                Have questions about our services? Want to list your vehicle? 
+                Send us a message and we will get back to you within 24 hours.
+              </p>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Phone className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-text-secondary">Phone</p>
+                    <p className="font-semibold text-text-primary">09564804965</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-text-secondary">Email</p>
+                    <p className="font-semibold text-text-primary">raypanganiban0825@gmail.com</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-text-secondary">Location</p>
+                    <p className="font-semibold text-text-primary">Metro Manila, Philippines</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl shadow-card p-8 border border-gray-100">
+              {inquirySent ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-text-primary mb-2">Message Sent!</h3>
+                  <p className="text-text-secondary mb-6">We will get back to you within 24 hours.</p>
+                  <button
+                    onClick={() => setInquirySent(false)}
+                    className="text-primary font-medium hover:underline"
+                  >
+                    Send another message
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleInquiry} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      value={inquiryForm.name}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, name: e.target.value })}
+                      placeholder="Juan Dela Cruz"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      value={inquiryForm.email}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, email: e.target.value })}
+                      placeholder="juan@example.com"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={inquiryForm.phone}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, phone: e.target.value })}
+                      placeholder="09123456789"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-primary mb-2">Your Message</label>
+                    <textarea
+                      value={inquiryForm.message}
+                      onChange={(e) => setInquiryForm({ ...inquiryForm, message: e.target.value })}
+                      placeholder="How can we help you?"
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full py-4 bg-primary text-white rounded-xl font-semibold hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-5 h-5" />
+                    Send Message
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>
