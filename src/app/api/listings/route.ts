@@ -35,44 +35,66 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const cookieHeader = request.headers.get("cookie");
+    const sessionMatch = cookieHeader?.match(/user_session=([^;]+)/);
 
-    // Get the first user (or create a default seller)
-    let seller = await prisma.user.findFirst({
-      where: { role: "seller" },
+    if (!sessionMatch) {
+      return NextResponse.json(
+        { error: "Please login to create a listing" },
+        { status: 401 }
+      );
+    }
+
+    const sessionData = JSON.parse(decodeURIComponent(sessionMatch[1]));
+    const userId = sessionData.id;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Please login to create a listing" },
+        { status: 401 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
-    if (!seller) {
-      // Create default seller if none exists
-      seller = await prisma.user.create({
-        data: {
-          name: "Default Seller",
-          email: "seller@example.com",
-          password: "default123",
-          role: "seller",
-          provider: "credentials",
-        },
-      });
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
     }
+
+    const body = await request.json();
+
+    if (!body.make || !body.model || !body.year || !body.price || !body.priceType) {
+      return NextResponse.json(
+        { error: "Make, model, year, price, and listing type are required" },
+        { status: 400 }
+      );
+    }
+
+    const title = `${body.year} ${body.make} ${body.model}`;
 
     const vehicle = await prisma.vehicle.create({
       data: {
-        title: body.title,
+        title,
         make: body.make,
         model: body.model,
         year: parseInt(body.year),
         price: parseFloat(body.price),
         priceType: body.priceType,
         mileage: body.mileage ? parseInt(body.mileage) : null,
-        color: body.color,
-        transmission: body.transmission,
-        engine: body.engine,
-        fuelType: body.fuelType,
-        condition: body.condition,
-        description: body.description,
+        color: body.color || null,
+        transmission: body.transmission || null,
+        engine: body.engine || null,
+        fuelType: body.fuelType || null,
+        condition: body.condition || null,
+        description: body.description || null,
         images: body.images || [],
-        listingStatus: "pending", // Requires admin approval
-        sellerId: seller.id,
+        listingStatus: "pending",
+        sellerId: user.id,
       },
     });
 
