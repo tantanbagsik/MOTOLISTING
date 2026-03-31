@@ -3,10 +3,22 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
-    const sessionToken = request.headers.get("cookie")?.match(/next-auth\.session-token=([^;]+)/)?.[1];
+    const cookieHeader = request.headers.get("cookie");
+    const sessionMatch = cookieHeader?.match(/user_session=([^;]+)/);
 
-    // For now, return all listings (we'll add auth later)
+    if (!sessionMatch) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const sessionData = JSON.parse(decodeURIComponent(sessionMatch[1]));
+    const userId = sessionData.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const vehicles = await prisma.vehicle.findMany({
+      where: { sellerId: userId },
       orderBy: { createdAt: "desc" },
     });
 
