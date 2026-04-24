@@ -69,20 +69,10 @@ export default function Navbar() {
             }`}>
               Browse Cars
             </Link>
-            <Link href="/listings?tab=sale" className={`text-sm font-medium transition-colors ${
+            <Link href="/seafood" className={`text-sm font-medium transition-colors ${
               scrolled ? "text-text-secondary hover:text-primary" : "text-white/80 hover:text-white"
             }`}>
-              For Sale
-            </Link>
-            <Link href="/listings?tab=rent" className={`text-sm font-medium transition-colors ${
-              scrolled ? "text-text-secondary hover:text-primary" : "text-white/80 hover:text-white"
-            }`}>
-              For Rent
-            </Link>
-            <Link href="/listings?tab=installment" className={`text-sm font-medium transition-colors ${
-              scrolled ? "text-text-secondary hover:text-primary" : "text-white/80 hover:text-white"
-            }`}>
-              Installment
+              Seafood Shop
             </Link>
           </div>
 
@@ -155,9 +145,7 @@ export default function Navbar() {
             <div className="flex flex-col gap-2">
               <Link href="/" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">Home</Link>
               <Link href="/listings" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">Browse Cars</Link>
-              <Link href="/listings?tab=sale" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">For Sale</Link>
-              <Link href="/listings?tab=rent" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">For Rent</Link>
-              <Link href="/listings?tab=installment" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">Installment</Link>
+              <Link href="/seafood" onClick={() => setIsOpen(false)} className="px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-100 rounded-lg">Seafood Shop</Link>
               <hr className="my-2" />
               {user ? (
                 <>
