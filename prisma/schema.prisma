@@ -118,3 +118,70 @@ model Quotation {
   monthlyPayment Float
   createdAt      DateTime @default(now())
 }
+
+model SeafoodCategory {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  description String?
+  image       String?
+  parentId    String?
+  createdAt   DateTime        @default(now())
+  products    SeafoodProduct[]
+  parent      SeafoodCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    SeafoodCategory[] @relation("CategoryHierarchy")
+}
+
+model SeafoodProduct {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String         @unique
+  description String?
+  price        Float
+  comparePrice Float?
+  unit         String        @default("kg")
+  categoryId   String
+  vendorId     String
+  vendor       User          @relation(fields: [vendorId], references: [id])
+  category     SeafoodCategory @relation(fields: [categoryId], references: [id])
+  images       String[]
+  stock        Int           @default(0)
+  minOrder     Int           @default(1)
+  status       String        @default("active")
+  featured    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+  subtotal       Float
+  shippingFee    Float       @default(0)
+  total          Float
+  status         String      @default("pending")
+  paymentMethod String?
+  paymentStatus String      @default("pending")
+  shippingName  String?
+  shippingPhone String?
+  shippingAddress String?
+  shippingCity  String?
+  notes         String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String         @id @default(cuid())
+  orderId     String
+  order      Order          @relation(fields: [orderId], references: [id])
+  productId  String
+  product    SeafoodProduct @relation(fields: [productId], references: [id])
+  quantity   Int
+  price      Float
+  createdAt  DateTime       @default(now())
+}
