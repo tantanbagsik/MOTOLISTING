@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Package, ShoppingCart, Users, Star, 
   BarChart3, Settings, LogOut, Menu, TrendingUp, 
   DollarSign, ShoppingBag, CheckCircle, XCircle, Clock,
-  Plus, Search, Edit, Trash2, Eye, X, Image, Save
+  Plus, Search, Edit, Trash2, Eye, X, Image, Save, Lock
 } from "lucide-react";
+
+const ADMINCredentials = {
+  email: "admin@raypanganiban.tech",
+  password: "password123"
+};
 
 const stats = [
   { label: "Total Sales", value: "₱125,400", change: "+12%", icon: DollarSign },
@@ -37,12 +43,40 @@ const reviews = [
 ];
 
 export default function SeafoodAdminPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [productsList, setProductsList] = useState(products);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+
+  useEffect(() => {
+    const savedAuth = localStorage.getItem("seafood_admin_auth");
+    if (savedAuth) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginForm.email === ADMINCredentials.email && loginForm.password === ADMINCredentials.password) {
+      setIsAuthenticated(true);
+      localStorage.setItem("seafood_admin_auth", "true");
+      setLoginError("");
+    } else {
+      setLoginError("Invalid email or password");
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("seafood_admin_auth");
+    setLoginForm({ email: "", password: "" });
+  };
 
   const filteredProducts = productsList.filter(p => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -73,6 +107,61 @@ export default function SeafoodAdminPage() {
       p.id === id ? { ...p, featured: !p.featured } : p
     ));
   };
+
+  // Login screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
+            <p className="text-gray-500 mt-2">SeafoodMart Administration</p>
+          </div>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <input
+                type="email"
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                placeholder="admin@raypanganiban.tech"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Password</label>
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            {loginError && (
+              <p className="text-red-500 text-sm">{loginError}</p>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-[#1E3A8A] text-white py-3 rounded-lg font-semibold hover:bg-[#1E3A8A]/90"
+            >
+              Sign In
+            </button>
+          </form>
+          <div className="mt-4 text-center">
+            <Link href="/seafood" className="text-sm text-[#1E3A8A] hover:underline">
+              Back to Store
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -107,10 +196,10 @@ export default function SeafoodAdminPage() {
           </nav>
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          <Link href="/seafood" className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 rounded-lg w-full">
             <LogOut className="w-5 h-5" />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
