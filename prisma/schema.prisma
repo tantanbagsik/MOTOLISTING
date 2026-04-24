@@ -23,6 +23,7 @@ model User {
   vehicles  Vehicle[]
   orders    Order[]
   seafoodProducts SeafoodProduct[]
+  reviews   ProductReview[]
 }
 
 model Vehicle {
@@ -137,23 +138,25 @@ model SeafoodCategory {
 model SeafoodProduct {
   id           String        @id @default(cuid())
   name         String
-  slug         String         @unique
+  slug         String        @unique
   description String?
   price        Float
   comparePrice Float?
-  unit         String        @default("kg")
+  unit         String       @default("kg")
   categoryId   String
-  vendorId     String
-  vendor       User          @relation(fields: [vendorId], references: [id])
-  category     SeafoodCategory @relation(fields: [categoryId], references: [id])
-  images       String[]
-  stock        Int           @default(0)
-  minOrder     Int           @default(1)
-  status       String        @default("active")
-  featured    Boolean       @default(false)
-  createdAt    DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  orderItems   OrderItem[]
+  vendorId    String
+  vendor      User          @relation(fields: [vendorId], references: [id])
+  category    SeafoodCategory @relation(fields: [categoryId], references: [id])
+  images      String[]
+  stock       Int           @default(0)
+  minOrder    Int           @default(1)
+  status     String        @default("active")
+  featured   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  orderItems OrderItem[]
+  variations ProductVariation[]
+  reviews    ProductReview[]
 }
 
 model Order {
@@ -185,5 +188,33 @@ model OrderItem {
   product     SeafoodProduct @relation(fields: [productId], references: [id])
   quantity    Int
   price       Float
+  variation  String? // Selected variation (e.g., "1kg", "500g", "Large")
   createdAt   DateTime      @default(now())
+}
+
+model ProductVariation {
+  id           String         @id @default(cuid())
+  productId    String
+  product     SeafoodProduct @relation(fields: [productId], references: [id])
+  name        String        // e.g., "1kg", "500g", "Large", "Medium"
+  price       Float
+  stock       Int          @default(0)
+  sku         String?
+  status     String       @default("active")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model ProductReview {
+  id          String         @id @default(cuid())
+  productId   String
+  product    SeafoodProduct @relation(fields: [productId], references: [id])
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  rating     Int          // 1-5 stars
+  title      String?
+  content    String
+  status     String       @default("pending") // pending, approved, rejected
+  helpful   Int          @default(0)
+  createdAt  DateTime      @default(now())
 }
