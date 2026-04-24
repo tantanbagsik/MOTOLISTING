@@ -829,7 +829,7 @@ function SeafoodContent() {
             <p className="text-center text-sm text-gray-600 mt-4">
               {authMode === "login" ? (
                 <>
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <button onClick={() => setAuthMode("register")} className="text-[#1E3A8A] font-medium">
                     Sign Up
                   </button>
