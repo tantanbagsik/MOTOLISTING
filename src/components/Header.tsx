@@ -27,6 +27,7 @@ export default function Header() {
     { href: "/listings?tab=sale", label: "For Sale" },
     { href: "/listings?tab=rent", label: "For Rent" },
     { href: "/listings?tab=installment", label: "Installment" },
+    { href: "/seafood", label: "Seafood Shop" },
     ...(session ? [{ href: "/dashboard", label: "Dashboard" }] : []),
     ...(session?.user?.role === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
   ];

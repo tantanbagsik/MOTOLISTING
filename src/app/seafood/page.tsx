@@ -95,12 +95,24 @@ function SeafoodContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showProductModal, setShowProductModal] = useState<Product | null>(null);
   const [selectedVariation, setSelectedVariation] = useState("1kg");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: "", phone: "", email: "", address: "" });
 
   useEffect(() => {
     const savedCart = localStorage.getItem("seafood_cart");
     if (savedCart) setCart(JSON.parse(savedCart));
     const savedUser = localStorage.getItem("seafood_user");
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      setProfileForm({
+        name: parsedUser.name || "",
+        phone: parsedUser.phone || "",
+        email: parsedUser.email || "",
+        address: parsedUser.address || ""
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -223,11 +235,55 @@ function SeafoodContent() {
 
             <div className="flex items-center gap-4">
               {user ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-full flex items-center justify-center text-white font-bold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="hidden lg:block text-sm font-medium">{user.name}</span>
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowUserDropdown(!showUserDropdown)} 
+                    className="flex items-center gap-2 hover:bg-gray-100 rounded-full px-2 py-1 transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-full flex items-center justify-center text-white font-bold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="hidden lg:block text-sm font-medium">{user.name}</span>
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </button>
+                  
+                  {showUserDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
+                      <div className="py-2">
+                        <button 
+                          onClick={() => { setShowUserDropdown(false); setIsCartOpen(true); }}
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          My Cart ({cart.length})
+                        </button>
+                        <button className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                          <Clock className="w-4 h-4" />
+                          Order History
+                        </button>
+                        <button 
+                          onClick={() => { setShowUserDropdown(false); setShowProfileModal(true); }}
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                        >
+                          <User className="w-4 h-4" />
+                          My Profile
+                        </button>
+                      </div>
+                      <div className="border-t border-gray-100 pt-2">
+                        <button 
+                          onClick={() => { setUser(null); setShowUserDropdown(false); localStorage.removeItem("seafood_user"); }}
+                          className="w-full px-4 py-2 text-left text-red-500 hover:bg-red-50 flex items-center gap-3"
+                        >
+                          <X className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button onClick={() => setShowAuth(true)} className="flex items-center gap-2 text-gray-700 hover:text-[#1E3A8A]">
@@ -724,6 +780,70 @@ function SeafoodContent() {
                   Add to Cart
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowProfileModal(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold">My Profile</h3>
+                <button onClick={() => setShowProfileModal(false)}><X className="w-6 h-6" /></button>
+              </div>
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input 
+                    type="text" 
+                    value={profileForm.address}
+                    onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2" 
+                  />
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const updatedUser = { ...user, ...profileForm };
+                    setUser(updatedUser);
+                    localStorage.setItem("seafood_user", JSON.stringify(updatedUser));
+                    setShowProfileModal(false);
+                  }}
+                  className="w-full bg-[#1E3A8A] text-white py-3 rounded-lg font-bold hover:bg-[#1E3A8A]/90"
+                >
+                  Save Changes
+                </button>
+              </form>
             </div>
           </div>
         </div>
