@@ -861,8 +861,9 @@ function SeafoodContent() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
+<h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
+                <li><Link href="/seafood-admin" className="hover:text-white">Admin Panel</Link></li>
                 <li><Link href="/seafood" className="hover:text-white">About Us</Link></li>
                 <li><Link href="/seafood" className="hover:text-white">Contact</Link></li>
                 <li><Link href="/seafood" className="hover:text-white">Terms & Conditions</Link></li>
