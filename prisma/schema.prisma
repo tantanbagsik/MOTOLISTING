@@ -21,6 +21,8 @@ model User {
   bookings  Booking[]
   inquiries Inquiry[]
   vehicles  Vehicle[]
+  orders    Order[]
+  seafoodProducts SeafoodProduct[]
 }
 
 model Vehicle {
@@ -178,10 +180,10 @@ model Order {
 model OrderItem {
   id          String         @id @default(cuid())
   orderId     String
-  order      Order          @relation(fields: [orderId], references: [id])
-  productId  String
-  product    SeafoodProduct @relation(fields: [productId], references: [id])
-  quantity   Int
-  price      Float
-  createdAt  DateTime       @default(now())
+  order       Order          @relation(fields: [orderId], references: [id])
+  productId   String
+  product     SeafoodProduct @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Float
+  createdAt   DateTime      @default(now())
 }
